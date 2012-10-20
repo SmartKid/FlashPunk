@@ -56,7 +56,7 @@
 		 */
 		public static function line(x1:int, y1:int, x2:int, y2:int, color:uint = 0xFFFFFF, alpha:Number = 1.0):void
 		{
-			color = (uint(alpha * 0xFF) << 24) | (color & 0xFFFFFF);
+			if (color <= 0xFFFFFF) color = FP.colorRGBAlpha(color, alpha);
 			
 			// get the drawing positions
 			x1 -= _camera.x;
@@ -154,8 +154,12 @@
 		 * @param	alpha	Alpha of the line.
 		 * @param	thick	The thickness of the line.
 		 */
-		public static function linePlus(x1:Number, y1:Number, x2:Number, y2:Number, color:uint = 0xFF000000, alpha:Number = 1, thick:Number = 1):void
+		public static function linePlus(x1:Number, y1:Number, x2:Number, y2:Number, color:uint = 0, alpha:Number = 1, thick:Number = 1):void
 		{
+			if (color > 0xFFFFFF) {
+				alpha = FP.getAlphaNumber(color);
+				color &= 0xFFFFFF;
+			}
 			_graphics.clear();
 			_graphics.lineStyle(thick, color, alpha, false, LineScaleMode.NONE);
 			_graphics.moveTo(x1 - _camera.x, y1 - _camera.y);
@@ -175,6 +179,9 @@
 		 */
 		public static function rect(x:Number, y:Number, width:Number, height:Number, color:uint = 0xFFFFFF, alpha:Number = 1, overwrite:Boolean = false):void
 		{
+			if (color > 0xFFFFFF) alpha = FP.getAlphaNumber(color);
+			else color = FP.colorRGBAlpha(color, alpha);
+			
 			if (! overwrite && (alpha < 1 || blend)) {
 				_graphics.clear();
 				_graphics.beginFill(color & 0xFFFFFF, alpha);
@@ -183,7 +190,6 @@
 				return;
 			}
 			
-			color = (uint(alpha * 0xFF) << 24) | (color & 0xFFFFFF);
 			_rect.x = x - _camera.x;
 			_rect.y = y - _camera.y;
 			_rect.width = width;
@@ -205,7 +211,10 @@
 		 */
 		public static function rectPlus(x:Number, y:Number, width:Number, height:Number, color:uint = 0xFFFFFF, alpha:Number = 1, fill:Boolean = true, thick:Number = 1, radius:Number = 0):void
 		{
-			if (color > 0xFFFFFF) color = 0xFFFFFF & color;
+			if (color > 0xFFFFFF) {
+				alpha = FP.getAlphaNumber(color);
+				color &= 0xFFFFFF;
+			}
 			_graphics.clear();
 			
 			if (fill) {
@@ -229,10 +238,12 @@
 		 * @param	y			Center y position.
 		 * @param	radius		Radius of the circle.
 		 * @param	color		Color of the circle.
+		 * @param	alpha		Alpha of the circle.
 		 */
-		public static function circle(x:int, y:int, radius:int, color:uint = 0xFFFFFF):void
+		public static function circle(x:int, y:int, radius:int, color:uint = 0xFFFFFF, alpha:Number = 1.0):void
 		{
-			if (color < 0xFF000000) color = 0xFF000000 | color;
+			if (color <= 0xFFFFFF) color = FP.colorRGBAlpha(color, alpha);
+			
 			x -= _camera.x;
 			y -= _camera.y;
 			var f:int = 1 - radius,
@@ -278,16 +289,20 @@
 		 */
 		public static function circlePlus(x:Number, y:Number, radius:Number, color:uint = 0xFFFFFF, alpha:Number = 1, fill:Boolean = true, thick:Number = 1):void
 		{
+			if (color > 0xFFFFFF) {
+				alpha = FP.getAlphaNumber(color);
+				color &= 0xFFFFFF;
+			}
 			_graphics.clear();
 			if (fill)
 			{
-				_graphics.beginFill(color & 0xFFFFFF, alpha);
+				_graphics.beginFill(color, alpha);
 				_graphics.drawCircle(x - _camera.x, y - _camera.y, radius);
 				_graphics.endFill();
 			}
 			else
 			{
-				_graphics.lineStyle(thick, color & 0xFFFFFF, alpha);
+				_graphics.lineStyle(thick, color, alpha);
 				_graphics.drawCircle(x - _camera.x, y - _camera.y, radius);
 			}
 			_target.draw(FP.sprite, null, null, blend);
@@ -307,16 +322,20 @@
 		 */
 		public static function ellipse(x:Number, y:Number, width:Number, height:Number, color:uint = 0xFFFFFF, alpha:Number = 1, fill:Boolean = true, thick:Number = 1, angle:Number = 0):void
 		{
+			if (color > 0xFFFFFF) {
+				alpha = FP.getAlphaNumber(color);
+				color &= 0xFFFFFF;
+			}
 			_graphics.clear();
 			if (fill)
 			{
-				_graphics.beginFill(color & 0xFFFFFF, alpha);
+				_graphics.beginFill(color, alpha);
 				_graphics.drawEllipse(-width / 2, -height / 2, width, height);
 				_graphics.endFill();
 			}
 			else
 			{
-				_graphics.lineStyle(thick, color & 0xFFFFFF, alpha);
+				_graphics.lineStyle(thick, color, alpha);
 				_graphics.drawEllipse(-width / 2, -height / 2, width, height);
 			}
 			var m:Matrix = new Matrix();
@@ -334,9 +353,10 @@
 		 */
 		public static function hitbox(e:Entity, outline:Boolean = true, color:uint = 0xFFFFFF, alpha:Number = 1):void
 		{
+			if (color > 0xFFFFFF) alpha = FP.getAlphaNumber(color);
+			
 			if (outline)
 			{
-				if (color < 0xFF000000) color = 0xFF000000 | color;
 				var x:int = e.x - e.originX - _camera.x,
 					y:int = e.y - e.originY - _camera.y;
 				_rect.x = x;
@@ -356,7 +376,6 @@
 			}
 			if (alpha >= 1 && !blend)
 			{
-				if (color < 0xFF000000) color = 0xFF000000 | color;
 				_rect.x = e.x - e.originX - _camera.x;
 				_rect.y = e.y - e.originY - _camera.y;
 				_rect.width = e.width;
@@ -364,7 +383,7 @@
 				_target.fillRect(_rect, color);
 				return;
 			}
-			if (color > 0xFFFFFF) color = 0xFFFFFF & color;
+			if (color > 0xFFFFFF) color &= 0xFFFFFF;
 			_graphics.clear();
 			_graphics.beginFill(color, alpha);
 			_graphics.drawRect(e.x - e.originX - _camera.x, e.y - e.originY - _camera.y, e.width, e.height);
@@ -384,8 +403,12 @@
 		 */
 		public static function curve(x1:Number, y1:Number, x2:Number, y2:Number, x3:Number, y3:Number, color:uint = 0, alpha:Number = 1, thick:Number = 1):void
 		{
+			if (color > 0xFFFFFF) {
+				alpha = FP.getAlphaNumber(color);
+				color &= 0xFFFFFF;
+			}
 			_graphics.clear();
-			_graphics.lineStyle(thick, color & 0xFFFFFF, alpha);
+			_graphics.lineStyle(thick, color, alpha);
 			_graphics.moveTo(x1 - _camera.x, y1 - _camera.y);
 			_graphics.curveTo(x2 - _camera.x, y2 - _camera.y, x3 - _camera.x, y3 - _camera.y);
 			_target.draw(FP.sprite, null, null, blend);
