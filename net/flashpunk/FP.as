@@ -628,6 +628,17 @@
 		}
 		
 		/**
+		 * Creates a color value by combining the chosen RGB color and alpha Number.
+		 * @param	color	An RGB color.
+		 * @param	alpha	A number from 0.0 (fully transparent) to 1.0 (fully opaque).
+		 * @return	The color uint.
+		public static function colorRGBAlpha(color:uint, alpha:Number = 1.0):uint
+		{
+			alpha = alpha < 0 ? (alpha > 1 ? 1 : alpha);
+			return (color & 0xFFFFFF) | (uint(Math.round(alpha * 0xFF)) << 24);
+		}
+		
+		/**
 		 * Creates a color value with the chosen HSV values.
 		 * @param	h		The hue of the color (from 0 to 1).
 		 * @param	s		The saturation of the color (from 0 to 1).
@@ -685,6 +696,26 @@
 		public static function getBlue(color:uint):uint
 		{
 			return color & 0xFF;
+		}
+		
+		/**
+		 * Finds the alpha factor of a color.
+		 * @param	color		The color to evaluate.
+		 * @return	A uint from 0 to 255.
+		 */
+		public static function getAlpha(color:uint):uint
+		{
+			return color >> 24;
+		}
+		
+		/**
+		 * Finds the alpha factor of a color.
+		 * @param	color		The color to evaluate.
+		 * @return	A Number from 0.0 to 1.0.
+		 */
+		public static function getAlphaNumber(color:uint):Number
+		{
+			return (color >> 24) / 0xFF;
 		}
 		
 		/**
