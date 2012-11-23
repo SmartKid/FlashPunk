@@ -119,7 +119,7 @@
 				if (! _control[input]) return false;
 				var v:Vector.<int> = _control[input],
 					i:int = v.length;
-				while (i --)
+				while (i-- != 0)
 				{
 					if (v[i] < 0)
 					{
@@ -145,7 +145,7 @@
 				if (! _control[input]) return false;
 				var v:Vector.<int> = _control[input],
 					i:int = v.length;
-				while (i --)
+				while (i-- != 0)
 				{
 					if ((v[i] < 0) ? _pressNum : _press.indexOf(v[i]) >= 0) return true;
 				}
@@ -166,7 +166,7 @@
 				if (! _control[input]) return false;
 				var v:Vector.<int> = _control[input],
 					i:int = v.length;
-				while (i --)
+				while (i-- != 0)
 				{
 					if ((v[i] < 0) ? _releaseNum : _release.indexOf(v[i]) >= 0) return true;
 				}
@@ -203,9 +203,9 @@
 		/** @private Called by Engine to update the input. */
 		public static function update():void
 		{
-			while (_pressNum --) _press[_pressNum] = -1;
+			while (_pressNum-- != 0) _press[_pressNum] = -1;
 			_pressNum = 0;
-			while (_releaseNum --) _release[_releaseNum] = -1;
+			while (_releaseNum-- != 0) _release[_releaseNum] = -1;
 			_releaseNum = 0;
 			if (mousePressed) mousePressed = false;
 			if (mouseReleased) mouseReleased = false;
@@ -230,7 +230,7 @@
 			_press.length = _pressNum = 0;
 			_release.length = _releaseNum = 0;
 			var i:int = _key.length;
-			while (i --) _key[i] = false;
+			while (i-- != 0) _key[i] = false;
 			_keyNum = 0;
 		}
 		

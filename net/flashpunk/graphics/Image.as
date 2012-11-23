@@ -249,11 +249,13 @@ package net.flashpunk.graphics
 			if (_alpha == 1) {
 				if (_tintFactor == 0) {
 					_tint = null;
-					return updateBuffer();
+					updateBuffer();
+					return;
 				}
 				if ((_tintMode == TINTING_MULTIPLY) && (_color == 0xFFFFFF)) {
 					_tint = null;
-					return updateBuffer();
+					updateBuffer();
+					return;
 				}
 			}
 			_tint = _colorTransform;
