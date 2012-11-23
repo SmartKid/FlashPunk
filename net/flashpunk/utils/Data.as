@@ -58,6 +58,17 @@
 		}
 		
 		/**
+		 * Reads a Number from the current data.
+		 * @param	name			Property to read.
+		 * @param	defaultValue	Default value.
+		 * @return	The property value, or defaultValue if the property is not assigned.
+		 */
+		public static function readNumber(name:String, defaultValue:uint = 0):uint
+		{
+			return Number(read(name, defaultValue));
+		}
+		
+		/**
 		 * Reads a Boolean from the current data.
 		 * @param	name			Property to read.
 		 * @param	defaultValue	Default value.
@@ -95,6 +106,16 @@
 		 * @param	value		Value to write.
 		 */
 		public static function writeUint(name:String, value:uint = 0):void
+		{
+			_data[name] = value;
+		}
+		
+		/**
+		 * Writes a Number to the current data.
+		 * @param	name		Property to write.
+		 * @param	value		Value to write.
+		 */
+		public static function writeNumber(name:String, value:Number = 0.0):void
 		{
 			_data[name] = value;
 		}
