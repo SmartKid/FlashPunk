@@ -36,6 +36,14 @@
 		}
 		
 		/**
+		 * Clears the file and deletes it from disk. The current data is not deleted.
+		 */
+		public static function clear():void
+		{
+			_shared.clear();
+		}
+		
+		/**
 		 * Reads an int from the current data.
 		 * @param	name			Property to read.
 		 * @param	defaultValue	Default value.
@@ -55,6 +63,17 @@
 		public static function readUint(name:String, defaultValue:uint = 0):uint
 		{
 			return uint(read(name, defaultValue));
+		}
+		
+		/**
+		 * Reads a Number from the current data.
+		 * @param	name			Property to read.
+		 * @param	defaultValue	Default value.
+		 * @return	The property value, or defaultValue if the property is not assigned.
+		 */
+		public static function readNumber(name:String, defaultValue:uint = 0):uint
+		{
+			return Number(read(name, defaultValue));
 		}
 		
 		/**
@@ -95,6 +114,16 @@
 		 * @param	value		Value to write.
 		 */
 		public static function writeUint(name:String, value:uint = 0):void
+		{
+			_data[name] = value;
+		}
+		
+		/**
+		 * Writes a Number to the current data.
+		 * @param	name		Property to write.
+		 * @param	value		Value to write.
+		 */
+		public static function writeNumber(name:String, value:Number = 0.0):void
 		{
 			_data[name] = value;
 		}

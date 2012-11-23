@@ -249,11 +249,13 @@ package net.flashpunk.graphics
 			if (_alpha == 1) {
 				if (_tintFactor == 0) {
 					_tint = null;
-					return updateBuffer();
+					updateBuffer();
+					return;
 				}
 				if ((_tintMode == TINTING_MULTIPLY) && (_color == 0xFFFFFF)) {
 					_tint = null;
-					return updateBuffer();
+					updateBuffer();
+					return;
 				}
 			}
 			_tint = _colorTransform;
@@ -346,12 +348,12 @@ package net.flashpunk.graphics
 		/**
 		 * The scaled width of the image.
 		 */
-		public function get scaledWidth():uint { return _bufferRect.width * scaleX * scale; }
+		public function get scaledWidth():Number { return _bufferRect.width * scaleX * scale; }
 		
 		/**
 		 * The scaled height of the image.
 		 */
-		public function get scaledHeight():uint { return _bufferRect.height * scaleY * scale; }
+		public function get scaledHeight():Number { return _bufferRect.height * scaleY * scale; }
 		
 		/**
 		 * Clipping rectangle for the image.

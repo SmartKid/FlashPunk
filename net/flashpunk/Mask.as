@@ -67,7 +67,7 @@
 		}
 		
 		/** @private Updates the parent's bounds for this mask. */
-		protected function update():void
+		public function update():void
 		{
 			
 		}

@@ -93,7 +93,7 @@
 		}
 		
 		/** @private Updates the parent's bounds for this mask. */
-		override protected function update():void 
+		override public function update():void 
 		{
 			if (list)
 			{

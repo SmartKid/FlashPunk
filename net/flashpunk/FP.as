@@ -130,7 +130,7 @@
 		public static function get world():World { return _world; }
 		public static function set world(value:World):void
 		{
-			if (_world == value) return;
+			if ((_goto ? _goto : _world) == value) return;
 			_goto = value;
 		}
 		
@@ -506,6 +506,40 @@
 		}
 		
 		/**
+		 * Wraps the value withing the minimum and maximum values.
+		 * @param	value		The Number fo evaluate.
+		 * @param	min			The minimum range. Default 0.
+		 * @param	max			The maximum range. Default 1.
+		 * @param	wrapMode		How to wrap: -1 (default) to include minimum value only, 1 to include maximum value only, and zero to include both values.
+		 * @return	The wrapped value.
+		public static function wrap(value:Number, min:Number = 0, max:Number = 1, wrapMode:int = -1):Number
+		{
+			value -= min;
+			if (wrapMode == 0 && value > 0) wrapMode = 1; // wrap to max if above max, and to min if below min
+			value %= (max - min);
+			if (wrapMode == 1) return value <= 0 ? value + max : value + min;
+			return value < 0 ? value + max : value + min;
+		}
+		
+		/**
+		 * Transfers a value from one scale to another scale, but wraps the value withing the second scale.
+		 * @param	value		The Number fo evaluate.
+		 * @param	min			The minimum range of the first scale.
+		 * @param	max			The maximum range of the first scale.
+		 * @param	min2			The minimum range of the second scale. Default 0.
+		 * @param	max2			The maximum range of the second scale. Default 1.
+		 * @param	wrapMode		How to wrap: -1 (default) to include minimum value only, 1 to include maximum value only, and zero to include both values.
+		 * @return	The wrapped value.
+		public static function scaleWrap(value:Number, min:Number, max:Number, min2:Number = 0, max2:Number = 1, wrapMode:int = -1):Number
+		{
+			value = (value - min) / (max - min) * (max2 - min2);
+			if (wrapMode == 0 && value > 0) wrapMode = 1; // wrap to max if above max, and to min if below min
+			value %= (max2 - min2);
+			if (wrapMode == 1) return value <= 0 ? value + max2 : value + min2;
+			return value < 0 ? value + max2 : value + min2;
+		}
+		
+		/**
 		 * The random seed used by FP's random functions.
 		 */
 		public static function get randomSeed():uint { return _getSeed; }
@@ -594,6 +628,17 @@
 		}
 		
 		/**
+		 * Creates a color value by combining the chosen RGB color and alpha Number.
+		 * @param	color	An RGB color.
+		 * @param	alpha	A number from 0.0 (fully transparent) to 1.0 (fully opaque).
+		 * @return	The color uint.
+		public static function colorRGBAlpha(color:uint, alpha:Number = 1.0):uint
+		{
+			alpha = alpha < 0 ? (alpha > 1 ? 1 : alpha);
+			return (color & 0xFFFFFF) | (uint(Math.round(alpha * 0xFF)) << 24);
+		}
+		
+		/**
 		 * Creates a color value with the chosen HSV values.
 		 * @param	h		The hue of the color (from 0 to 1).
 		 * @param	s		The saturation of the color (from 0 to 1).
@@ -651,6 +696,26 @@
 		public static function getBlue(color:uint):uint
 		{
 			return color & 0xFF;
+		}
+		
+		/**
+		 * Finds the alpha factor of a color.
+		 * @param	color		The color to evaluate.
+		 * @return	A uint from 0 to 255.
+		 */
+		public static function getAlpha(color:uint):uint
+		{
+			return color >> 24;
+		}
+		
+		/**
+		 * Finds the alpha factor of a color.
+		 * @param	color		The color to evaluate.
+		 * @return	A Number from 0.0 to 1.0.
+		 */
+		public static function getAlphaNumber(color:uint):Number
+		{
+			return (color >> 24) / 0xFF;
 		}
 		
 		/**
