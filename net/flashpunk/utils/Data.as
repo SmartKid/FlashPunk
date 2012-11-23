@@ -36,6 +36,14 @@
 		}
 		
 		/**
+		 * Clears the file and deletes it from disk. The current data is not deleted.
+		 */
+		public static function clear():void
+		{
+			_shared.clear();
+		}
+		
+		/**
 		 * Reads an int from the current data.
 		 * @param	name			Property to read.
 		 * @param	defaultValue	Default value.
