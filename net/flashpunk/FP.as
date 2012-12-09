@@ -112,6 +112,7 @@
 		 * @param width		New width.
 		 * @param height	New height.
 		 */
+		[Inline]
 		public static function resize(width:int, height:int):void
 		{
 			FP.width = width;
@@ -139,6 +140,7 @@
 		 * @param	x	X position.
 		 * @param	y	Y position.
 		 */
+		[Inline]
 		public static function setCamera(x:Number = 0, y:Number = 0):void
 		{
 			camera.x = x;
@@ -148,6 +150,7 @@
 		/**
 		 * Resets the camera position.
 		 */
+		[Inline]
 		public static function resetCamera():void
 		{
 			camera.x = camera.y = 0;
@@ -182,16 +185,15 @@
 		 * Remove an element from an array
 		 * @return	True if element existed and has been removed, false if element was not in array.
 		 */
+		[Inline]
 		public static function remove(array:*, toRemove:*):Boolean
 		{
 			var i:int = array.indexOf(toRemove);
 			
-			if (i >= 0) {
+			if (i == -1) return false;
+			else {
 				array.splice(i, 1);
-			
 				return true;
-			} else {
-				return false;
 			}
 		}
 		
@@ -200,6 +202,7 @@
 		 * @param	objs		The Objects you want to randomly choose from. Can be ints, Numbers, Points, etc.
 		 * @return	A randomly chosen one of the provided parameters.
 		 */
+		[Inline]
 		public static function choose(...objs):*
 		{
 			var c:* = (objs.length == 1 && (objs[0] is Array || objs[0] is Vector.<*>)) ? objs[0] : objs;
@@ -211,6 +214,7 @@
 		 * @param	value		The Number to evaluate.
 		 * @return	1 if value > 0, -1 if value < 0, and 0 when value == 0.
 		 */
+		[Inline]
 		public static function sign(value:Number):int
 		{
 			return value < 0 ? -1 : (value > 0 ? 1 : 0);
@@ -223,6 +227,7 @@
 		 * @param	amount	How much you want the value to approach target by.
 		 * @return	The new value.
 		 */
+		[Inline]
 		public static function approach(value:Number, target:Number, amount:Number):Number
 		{
 			return value < target ? (target < value + amount ? target : value + amount) : (target > value - amount ? target : value - amount);
@@ -235,6 +240,7 @@
 		 * @param	t		Interpolation factor.
 		 * @return	When t=0, returns a. When t=1, returns b. When t=0.5, will return halfway between a and b. Etc.
 		 */
+		[Inline]
 		public static function lerp(a:Number, b:Number, t:Number = 1):Number
 		{
 			return a + (b - a) * t;
@@ -273,6 +279,7 @@
 		 * @param	y			Y position to step towards.
 		 * @param	distance	The distance to step (will not overshoot target).
 		 */
+		[Inline]
 		public static function stepTowards(object:Object, x:Number, y:Number, distance:Number = 1):void
 		{
 			point.x = x - object.x;
@@ -281,11 +288,13 @@
 			{
 				object.x = x;
 				object.y = y;
-				return;
 			}
-			point.normalize(distance);
-			object.x += point.x;
-			object.y += point.y;
+			else
+			{
+				point.normalize(distance);
+				object.x += point.x;
+				object.y += point.y;
+			}
 		}
 		
 		/**
@@ -294,6 +303,7 @@
 		 * @param	anchor		The anchor object.
 		 * @param	distance	The max distance object can be anchored to the anchor.
 		 */
+		[Inline]
 		public static function anchorTo(object:Object, anchor:Object, distance:Number = 0):void
 		{
 			point.x = object.x - anchor.x;
@@ -311,6 +321,7 @@
 		 * @param	y2		The second y-position.
 		 * @return	The angle from (x1, y1) to (x2, y2).
 		 */
+		[Inline]
 		public static function angle(x1:Number, y1:Number, x2:Number, y2:Number):Number
 		{
 			var a:Number = Math.atan2(y2 - y1, x2 - x1) * DEG;
@@ -325,6 +336,7 @@
 		 * @param	x			X offset.
 		 * @param	y			Y offset.
 		 */
+		[Inline]
 		public static function angleXY(object:Object, angle:Number, length:Number = 1, x:Number = 0, y:Number = 0):void
 		{
 			angle *= RAD;
@@ -338,6 +350,7 @@
 		 * @param	anchor		Anchor to rotate around.
 		 * @param	angle		The amount of degrees to rotate by.
 		 */
+		[Inline]
 		public static function rotateAround(object:Object, anchor:Object, angle:Number = 0, relative:Boolean = true):void
 		{
 			if (relative) angle += FP.angle(anchor.x, anchor.y, object.x, object.y);
@@ -350,6 +363,7 @@
 		 * @param	b	Second angle in degrees.
 		 * @return	Difference in angles, wrapped around to the range -180 to 180.
 		 */
+		[Inline]
 		public static function angleDiff(a:Number, b:Number):Number
 		{
 			var diff:Number = b - a;
@@ -367,6 +381,7 @@
 		 * @param	y2		The second y-position.
 		 * @return	The distance.
 		 */
+		[Inline]
 		public static function distance(x1:Number, y1:Number, x2:Number = 0, y2:Number = 0):Number
 		{
 			return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -384,26 +399,27 @@
 		 * @param	h2		The height of the second rect.
 		 * @return	The distance.
 		 */
+		[Inline]
 		public static function distanceRects(x1:Number, y1:Number, w1:Number, h1:Number, x2:Number, y2:Number, w2:Number, h2:Number):Number
 		{
 			if (x1 < x2 + w2 && x2 < x1 + w1)
 			{
 				if (y1 < y2 + h2 && y2 < y1 + h1) return 0;
-				if (y1 > y2) return y1 - (y2 + h2);
-				return y2 - (y1 + h1);
+				else if (y1 > y2) return y1 - (y2 + h2);
+				else return y2 - (y1 + h1);
 			}
-			if (y1 < y2 + h2 && y2 < y1 + h1)
+			else if (y1 < y2 + h2 && y2 < y1 + h1)
 			{
 				if (x1 > x2) return x1 - (x2 + w2);
-				return x2 - (x1 + w1)
+				else return x2 - (x1 + w1)
 			}
-			if (x1 > x2)
+			else if (x1 > x2)
 			{
 				if (y1 > y2) return distance(x1, y1, (x2 + w2), (y2 + h2));
-				return distance(x1, y1 + h1, x2 + w2, y2);
+				else return distance(x1, y1 + h1, x2 + w2, y2);
 			}
-			if (y1 > y2) return distance(x1 + w1, y1, x2, y2 + h2)
-			return distance(x1 + w1, y1 + h1, x2, y2);
+			else if (y1 > y2) return distance(x1 + w1, y1, x2, y2 + h2)
+			else return distance(x1 + w1, y1 + h1, x2, y2);
 		}
 		
 		/**
@@ -416,26 +432,27 @@
 		 * @param	rh		The height of the rect.
 		 * @return	The distance.
 		 */
+		[Inline]
 		public static function distanceRectPoint(px:Number, py:Number, rx:Number, ry:Number, rw:Number, rh:Number):Number
 		{
 			if (px >= rx && px <= rx + rw)
 			{
 				if (py >= ry && py <= ry + rh) return 0;
-				if (py > ry) return py - (ry + rh);
-				return ry - py;
+				else if (py > ry) return py - (ry + rh);
+				else return ry - py;
 			}
-			if (py >= ry && py <= ry + rh)
+			else if (py >= ry && py <= ry + rh)
 			{
 				if (px > rx) return px - (rx + rw);
-				return rx - px;
+				else return rx - px;
 			}
-			if (px > rx)
+			else if (px > rx)
 			{
 				if (py > ry) return distance(px, py, rx + rw, ry + rh);
-				return distance(px, py, rx + rw, ry);
+				else return distance(px, py, rx + rw, ry);
 			}
-			if (py > ry) return distance(px, py, rx, ry + rh)
-			return distance(px, py, rx, ry);
+			else if (py > ry) return distance(px, py, rx, ry + rh)
+			else return distance(px, py, rx, ry);
 		}
 		
 		/**
@@ -445,6 +462,7 @@
 		 * @param	max			The maximum range.
 		 * @return	The clamped value.
 		 */
+		[Inline]
 		public static function clamp(value:Number, min:Number, max:Number):Number
 		{
 			if (max > min)
@@ -452,8 +470,11 @@
 				value = value < max ? value : max;
 				return value > min ? value : min;
 			}
-			value = value < min ? value : min;
-			return value > max ? value : max;
+			else
+			{
+				value = value < min ? value : min;
+				return value > max ? value : max;
+			}
 		}
 		
 		/**
@@ -464,6 +485,7 @@
 		 * @param	width		Rectangle's width.
 		 * @param	height		Rectangle's height.
 		 */
+		[Inline]
 		public static function clampInRect(object:Object, x:Number, y:Number, width:Number, height:Number, padding:Number = 0):void
 		{
 			object.x = clamp(object.x, x + padding, x + width - padding);
@@ -479,6 +501,7 @@
 		 * @param	max2		The maximum range of the second scale.
 		 * @return	The scaled value.
 		 */
+		[Inline]
 		public static function scale(value:Number, min:Number, max:Number, min2:Number, max2:Number):Number
 		{
 			return min2 + ((value - min) / (max - min)) * (max2 - min2);
@@ -493,6 +516,7 @@
 		 * @param	max2		The maximum range of the second scale.
 		 * @return	The scaled and clamped value.
 		 */
+		[Inline]
 		public static function scaleClamp(value:Number, min:Number, max:Number, min2:Number, max2:Number):Number
 		{
 			value = min2 + ((value - min) / (max - min)) * (max2 - min2);
@@ -501,8 +525,11 @@
 				value = value < max2 ? value : max2;
 				return value > min2 ? value : min2;
 			}
-			value = value < min2 ? value : min2;
-			return value > max2 ? value : max2;
+			else
+			{
+				value = value < min2 ? value : min2;
+				return value > max2 ? value : max2;
+			}
 		}
 		
 		/**
@@ -512,10 +539,11 @@
 		 * @param	max			The maximum range. Default 1.
 		 * @param	wrapMode		How to wrap: -1 (default) to include minimum value only, 1 to include maximum value only, and zero to include both values.
 		 * @return	The wrapped value.
+		 */
 		public static function wrap(value:Number, min:Number = 0, max:Number = 1, wrapMode:int = -1):Number
 		{
 			value -= min;
-			if (wrapMode == 0 && value > 0) wrapMode = 1; // wrap to max if above max, and to min if below min
+			if (wrapMode == 0 && value > 0) wrapMode = 1; // wrap to max if above max, and to min otherwise
 			value %= (max - min);
 			if (wrapMode == 1) return value <= 0 ? value + max : value + min;
 			return value < 0 ? value + max : value + min;
@@ -530,6 +558,7 @@
 		 * @param	max2			The maximum range of the second scale. Default 1.
 		 * @param	wrapMode		How to wrap: -1 (default) to include minimum value only, 1 to include maximum value only, and zero to include both values.
 		 * @return	The wrapped value.
+		 */
 		public static function scaleWrap(value:Number, min:Number, max:Number, min2:Number = 0, max2:Number = 1, wrapMode:int = -1):Number
 		{
 			value = (value - min) / (max - min) * (max2 - min2);
@@ -584,10 +613,11 @@
 		 * @param	loop		If true, will jump to the first item after the last item is reached.
 		 * @return	The next item in the list.
 		 */
+		[Inline]
 		public static function next(current:*, options:Array, loop:Boolean = true):*
 		{
 			if (loop) return options[(options.indexOf(current) + 1) % options.length];
-			return options[Math.max(options.indexOf(current) + 1, options.length - 1)];
+			else return options[Math.max(options.indexOf(current) + 1, options.length - 1)];
 		}
 		
 		/**
@@ -597,10 +627,11 @@
 		 * @param	loop		If true, will jump to the last item after the first is reached.
 		 * @return	The previous item in the list.
 		 */
+		[Inline]
 		public static function prev(current:*, options:Array, loop:Boolean = true):*
 		{
 			if (loop) return options[((options.indexOf(current) - 1) + options.length) % options.length];
-			return options[Math.max(options.indexOf(current) - 1, 0)];
+			else return options[Math.max(options.indexOf(current) - 1, 0)];
 		}
 		
 		/**
@@ -610,6 +641,7 @@
 		 * @param	b			Item b.
 		 * @return	Returns a if current is b, and b if current is a.
 		 */
+		[Inline]
 		public static function swap(current:*, a:*, b:*):*
 		{
 			return current == a ? b : a;
@@ -622,6 +654,7 @@
 		 * @param	B		The blue value of the color, from 0 to 255.
 		 * @return	The color uint.
 		 */
+		[Inline]
 		public static function getColorRGB(R:uint = 0, G:uint = 0, B:uint = 0):uint
 		{
 			return R << 16 | G << 8 | B;
@@ -632,6 +665,8 @@
 		 * @param	color	An RGB color.
 		 * @param	alpha	A number from 0.0 (fully transparent) to 1.0 (fully opaque).
 		 * @return	The color uint.
+		 */
+		[Inline]
 		public static function colorRGBAlpha(color:uint, alpha:Number = 1.0):uint
 		{
 			alpha = alpha < 0 ? (alpha > 1 ? 1 : alpha);
@@ -645,6 +680,7 @@
 		 * @param	v		The value of the color (from 0 to 1).
 		 * @return	The color uint.
 		 */
+		[Inline]
 		public static function getColorHSV(h:Number, s:Number, v:Number):uint
 		{
 			h = h < 0 ? 0 : (h > 1 ? 1 : h);
@@ -673,6 +709,7 @@
 		 * @param	color		The color to evaluate.
 		 * @return	A uint from 0 to 255.
 		 */
+		[Inline]
 		public static function getRed(color:uint):uint
 		{
 			return color >> 16 & 0xFF;
@@ -683,6 +720,7 @@
 		 * @param	color		The color to evaluate.
 		 * @return	A uint from 0 to 255.
 		 */
+		[Inline]
 		public static function getGreen(color:uint):uint
 		{
 			return color >> 8 & 0xFF;
@@ -693,6 +731,7 @@
 		 * @param	color		The color to evaluate.
 		 * @return	A uint from 0 to 255.
 		 */
+		[Inline]
 		public static function getBlue(color:uint):uint
 		{
 			return color & 0xFF;
@@ -703,6 +742,7 @@
 		 * @param	color		The color to evaluate.
 		 * @return	A uint from 0 to 255.
 		 */
+		[Inline]
 		public static function getAlpha(color:uint):uint
 		{
 			return color >> 24;
@@ -713,6 +753,7 @@
 		 * @param	color		The color to evaluate.
 		 * @return	A Number from 0.0 to 1.0.
 		 */
+		[Inline]
 		public static function getAlphaNumber(color:uint):Number
 		{
 			return (color >> 24) / 0xFF;
@@ -798,6 +839,7 @@
 		 * @param	file		The embedded file to load.
 		 * @return	An XML object representing the file.
 		 */
+		[Inline]
 		public static function getXML(file:Class):XML
 		{
 			var bytes:ByteArray = new file;
@@ -856,6 +898,7 @@
 		 * 
 		 * Example: FP.alarm(5.0, callbackFunction, Tween.LOOPING); // Calls callbackFunction every 5 seconds
 		 */
+		[Inline]
 		public static function alarm(delay:Number, callback:Function, type:uint = 2, tweener:Tweener = null):Alarm
 		{
 			if (! tweener) tweener = FP.tweener;
@@ -873,6 +916,7 @@
 		 * @param	to		Ending frame.
 		 * @param	skip	Skip amount every frame (eg. use 1 for every 2nd frame).
 		 */
+		[Inline]
 		public static function frames(from:int, to:int, skip:int = 0):Array
 		{
 			var a:Array = [];
@@ -900,7 +944,8 @@
 		 * Shuffles the elements in the array.
 		 * @param	a		The Object to shuffle (an Array or Vector).
 		 */
-		public static function shuffle(a:Object):void
+		[Inline]
+		public static function shuffle(a:*):void
 		{
 			if (a is Array || a is Vector.<*>)
 			{
@@ -919,7 +964,7 @@
 		 * @param	object		The Object to sort (an Array or Vector).
 		 * @param	ascending	If it should be sorted ascending (true) or descending (false).
 		 */
-		public static function sort(object:Object, ascending:Boolean = true):void
+		public static function sort(object:*, ascending:Boolean = true):void
 		{
 			if (object is Array || object is Vector.<*>) quicksort(object, 0, object.length - 1, ascending);
 		}
@@ -930,12 +975,13 @@
 		 * @param	property	The numeric property of object's elements to sort by.
 		 * @param	ascending	If it should be sorted ascending (true) or descending (false).
 		 */
-		public static function sortBy(object:Object, property:String, ascending:Boolean = true):void
+		public static function sortBy(object:*, property:String, ascending:Boolean = true):void
 		{
 			if (object is Array || object is Vector.<*>) quicksortBy(object, 0, object.length - 1, ascending, property);
 		}
 		
-		/** @private Quicksorts the array. */ 
+		/** @private Quicksorts the array. */
+		[Inline]
 		private static function quicksort(a:Object, left:int, right:int, ascending:Boolean):void
 		{
 			var i:int = left, j:int = right, t:Number,
@@ -972,8 +1018,9 @@
 			if (i < right) quicksort(a, i, right, ascending);
 		}
 		
-		/** @private Quicksorts the array by the property. */ 
-		private static function quicksortBy(a:Object, left:int, right:int, ascending:Boolean, property:String):void
+		/** @private Quicksorts the array by the property. */
+		[Inline]
+		private static function quicksortBy(a:*, left:int, right:int, ascending:Boolean, property:String):void
 		{
 			var i:int = left, j:int = right, t:Object,
 				p:* = a[Math.round((left + right) * .5)][property];
