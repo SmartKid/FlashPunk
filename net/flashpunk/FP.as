@@ -3,6 +3,9 @@
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.display.Stage;
+	import flash.display3D.Context3D;
+	import flash.events.ErrorEvent;
+	import flash.events.Event;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -24,7 +27,7 @@
 		/**
 		 * The FlashPunk major version.
 		 */
-		public static const VERSION:String = "1.6";
+		public static const VERSION:String = "1.7";
 		
 		/**
 		 * Width of the game.
@@ -1056,6 +1059,55 @@
 			if (i < right) quicksortBy(a, i, right, ascending, property);
 		}
 		
+		/**
+		 * Enables hardware acceleration using Stage3D.
+		 */
+		public static function enableStage3D():void
+		{
+			if (stage3DMode != 0) return;
+			if (!stage.hasOwnProperty("stage3Ds"))
+			{
+				if (_console) _console.log("Stage3D could not be enabled: flash player version is too low");
+				else trace("Stage3D could not be enabled: flash player version is too low");
+				stage3DMode = -2;
+				return;
+			}
+			stage.stage3Ds[0].addEventListener(Event.CONTEXT3D_CREATE, initStage3D);
+			stage.stage3Ds[0].addEventListener(ErrorEvent.ERROR, errorStage3D);
+			stage.stage3Ds[0].requestContext3D();
+		}
+		
+		/**
+		 * Handles the newly created Stage3D context.
+		 */
+		private static function initStage3D(e:Event):void
+		{
+			stage3DContext = stage.stage3Ds[0].context3D;
+			if (context3D.driverInfo == "Software (Direct blitting)")
+			{
+				if (_console) _console.log("Stage3D enabled: using software fallback");
+				else trace("Stage3D enabled: using software fallback");
+				stage3DMode = 1;
+			}
+			else
+			{
+				if (_console) _console.log("Stage3D enabled");
+				else trace("Stage3D enabled");
+				stage3DMode = 2;
+			}
+			stage3DContext.createBackBuffer(width, height, 0);
+		}
+		
+		/**
+		 * Handles Stage3D errors.
+		 */
+		private static function errorStage3D(e:ErrorEvent):void
+		{
+			if (_console) _console.log("Stage3D could not be enabled: wrong wmode value");
+			else trace("Stage3D could not be enabled: wrong wmode value");
+			stage3DMode = -1;
+		}
+		
 		// World information.
 		/** @private */ internal static var _world:World;
 		/** @private */ internal static var _goto:World;
@@ -1098,5 +1150,9 @@
 		/** @private */ public static var matrix:Matrix = new Matrix;
 		/** @private */ public static var sprite:Sprite = new Sprite;
 		/** @private */ public static var entity:Entity;
+		
+		// Stage3D information.
+		/** @private */ public static var stage3DMode:int = 0;
+		/** @private */ public static var stage3Dcontext:Context3D;
 	}
 }

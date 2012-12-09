@@ -1,6 +1,7 @@
 ﻿package net.flashpunk.graphics 
 {
 	import flash.display.BitmapData;
+	import flash.display3D.Context3D;
 	import flash.geom.Point;
 
 	import net.flashpunk.*;
@@ -49,6 +50,30 @@
 					_camera.x = camera.x;
 					_camera.y = camera.y;
 					g.render(target, _point, _camera);
+				}
+			}
+		}
+		
+		/** @private Renders the Graphics in the list to Stage3D. */
+		override public function renderStage3D(context:Context3D, point:Point, camera:Point):void
+		{
+			point.x += x;
+			point.y += y;
+			camera.x *= scrollX;
+			camera.y *= scrollY;
+			for each (var g:Graphic in _graphics)
+			{
+				if (g.visible)
+				{
+					if (g.relative)
+					{
+						_point.x = point.x;
+						_point.y = point.y;
+					}
+					else _point.x = _point.y = 0;
+					_camera.x = camera.x;
+					_camera.y = camera.y;
+					g.renderStage3D(context, _point, _camera);
 				}
 			}
 		}

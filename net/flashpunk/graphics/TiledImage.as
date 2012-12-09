@@ -12,16 +12,16 @@ package net.flashpunk.graphics
 	{
 		/**
 		 * Constructs the TiledImage.
-		 * @param	texture		Source texture.
-		 * @param	width		The width of the image (the texture will be drawn to fill this area).
-		 * @param	height		The height of the image (the texture will be drawn to fill this area).
-		 * @param	clipRect	An optional area of the source texture to use (eg. a tile from a tileset).
+		 * @param	tile		Source image.
+		 * @param	width		The width of the image (the tile will be drawn to fill this area).
+		 * @param	height		The height of the image (the tile will be drawn to fill this area).
+		 * @param	clipRect	An optional area of the source tile to use (eg. a tile from a tileset).
 		 */
-		public function TiledImage(texture:*, width:uint = 0, height:uint = 0, clipRect:Rectangle = null)
+		public function TiledImage(tile:*, width:uint = 0, height:uint = 0, clipRect:Rectangle = null)
 		{
 			_width = width;
 			_height = height;
-			super(texture, clipRect);
+			super(tile, clipRect);
 		}
 		
 		/** @private Creates the buffer. */
@@ -42,10 +42,10 @@ package net.flashpunk.graphics
 		override public function updateBuffer(clearBefore:Boolean = false):void
 		{
 			if (!_source) return;
-			if (!_texture)
+			if (!_tile)
 			{
-				_texture = new BitmapData(_sourceRect.width, _sourceRect.height, true, 0);
-				_texture.copyPixels(_source, _sourceRect, FP.zero);
+				_tile = new BitmapData(_sourceRect.width, _sourceRect.height, true, 0);
+				_tile.copyPixels(_source, _sourceRect, FP.zero);
 			}
 			_buffer.fillRect(_bufferRect, 0);
 			_graphics.clear();
@@ -54,9 +54,9 @@ package net.flashpunk.graphics
 				FP.matrix.identity();
 				FP.matrix.tx = Math.round(_offsetX);
 				FP.matrix.ty = Math.round(_offsetY);
-				_graphics.beginBitmapFill(_texture, FP.matrix);
+				_graphics.beginBitmapFill(_tile, FP.matrix);
 			}
-			else _graphics.beginBitmapFill(_texture);
+			else _graphics.beginBitmapFill(_tile);
 			_graphics.drawRect(0, 0, _width, _height);
 			_buffer.draw(FP.sprite, null, _tint);
 		}
@@ -98,7 +98,7 @@ package net.flashpunk.graphics
 		
 		// Drawing information.
 		/** @private */ private var _graphics:Graphics = FP.sprite.graphics;
-		/** @private */ private var _texture:BitmapData;
+		/** @private */ private var _tile:BitmapData;
 		/** @private */ private var _width:uint;
 		/** @private */ private var _height:uint;
 		/** @private */ private var _offsetX:Number = 0;

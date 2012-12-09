@@ -1,11 +1,21 @@
 package net.flashpunk.graphics 
 {
+	import com.adobe.utils.AGALMiniAssembler;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display3D.Context3D;
+	import flash.display3D.Context3DProgramType;
+	import flash.display3D.Context3DTextureFormat;
+	import flash.display3D.IndexBuffer3D;
+	import flash.display3D.Program3D;
+	import flash.display3D.VertexBuffer3D;
+	import flash.display3D.textures.Texture;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
+	import flash.geom.Matrix3D;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.geom.Vector3D;
 
 	import net.flashpunk.*;
 
@@ -129,6 +139,103 @@ package net.flashpunk.graphics
 			target.draw(_bitmap, _matrix, null, blend, null, smooth);
 		}
 		
+		/** @private Renders the image to Stage3D. */
+		override public function renderStage3D(context:Context3D, point:Point, camera:Point):void
+		{
+			if (!_buffer || !context) return;
+			_point.x = point.x + x - originX - camera.x * scrollX;
+			_point.y = point.y + y - originY - camera.y * scrollY;
+			
+			if (_program == null) setupStage3D(context);
+			if (_texture == null) createTexture(context);
+			
+			var vertices:Vector.<Number> = Vector.<Number>([
+				_point.x,                 _point.y,                  0, 0, 0, // x, y, x, u, v
+				_point.x + _source.width, _point.y,                  0, 1, 0,
+				_point.x,                 _point.y + _source.height, 0, 0, 1,
+				_point.x + _source.width, _point.y + _source.height, 0, 1, 1
+			]);
+			var vertexBuffer:VertexBuffer3D = context.createVertexBuffer(4, 5); // 4 vertices of 5 coordinates each
+			vertexBuffer.uploadFromVector(vertices, 0, 4); // 0 offset, 4 vertices
+			
+			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3); // assigns XYZ coordinates to register 'va0'
+			context.setVertexBufferAt(1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_2); // assigns UV coordinates to register 'va1'
+			
+			var matrix:Matrix3D = new Matrix3D(Vector.<Number>([
+					scaleX * scale, 0, 0, -originX * scaleX * scale,
+					0, scaleY * scale, 0, -originY * scaleY * scale,
+					0, 0, 1, 0,
+					0, 0, 0, 1
+				]));
+			if (angle != 0) matrix.appendRotation(angle * FP.RAD, Vector3D.Z_AXIS);
+			matrix.appendTranslation(originX + _point.x, originY + _point.y, 0);
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true); // assigns matrix to registers 'vc0' through 'vc3'
+			
+			context.setTextureAt(0, _texture); // assigns texture to register 'fs0'
+			
+			switch (blend)
+			{
+				case BlendMode.ALPHA:
+					context.setBlendFactors(Context3DBlendFactor.ZERO, Context3DBlendFactor.SOURCE_ALPHA);
+					break;
+				case BlendMode.ERASE:
+					context.setBlendFactors(Context3DBlendFactor.ZERO, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+					break;
+				case BlendMode.ADD:
+					context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.DESTINATION_ALPHA);
+					break;
+				case BlendMode.MULTIPLY:
+					context.setBlendFactors(Context3DBlendFactor.DESTINATION_COLOR, Context3DBlendFactor.ZERO);
+					break;
+				case BlendMode.SCREEN:
+					context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE);
+					break;
+				case BlendMode.NORMAL:
+					context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+					break;
+				default:
+					if (blend) {
+						if (FP.console) FP.console.log("The blend mode '" + blend + "' does not work with Stage3D rendering.");
+						else trace("The blend mode '" + blend + "' does not work with Stage3D rendering.");
+					}
+					context.setBlendFactors(Context3DBlendFactor.ONE, Context3DBlendFactor.ZERO);
+					break;
+			}
+			
+			context.setProgram(_program);
+			context.drawTriangles(_indexBuffer);
+		}
+		
+		/** @private Creates the index buffer and shader program. */
+		protected function setupStage3D(context:Context3D):void
+		{
+			// create index buffer
+			_indexBuffer = context.createIndexBuffer(6); // 6 total vertices
+			_indexBuffer.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6); // offset 0, 6 vertices (2 triangles)
+			
+			// create program
+			var vertexShader:AGALMiniAssembler = new AGALMiniAssembler();
+			vertexShader.assemble(
+				Context3DProgramType.VERTEX,
+				"m44 op, va0, vc0\n" + // transform XYZ coordinates using passed-in matrix and store result in output
+				"mov v0, va1" // pass UV coordinates to fragment shader
+			);
+			var fragmentShader:AGALMiniAssembler = new AGALMiniAssembler();
+			fragmentShader.assemble(
+				Context3DProgramType.FRAGMENT,
+				"tex oc, v0, fs0 <2d,linear,nomip,wrap>" // use UV coordinates to create texture and store result in output
+			);
+			_program = context.createProgram();
+			_program.upload(vertexShader.agalcode, fragmentShader.agalcode);
+		}
+		
+		/** @private Creates the Stage3D texture. */
+		protected function createTexture(context:Context3D):void
+		{
+			_texture = context.createTexture(_bufferRect.width, _bufferRect.height, Context3DTextureFormat.BRGA, false);
+			_texture.uploadFromBitmapData(_buffer);
+		}
+		
 		/**
 		 * Creates a new rectangle Image.
 		 * @param	width		Width of the rectangle.
@@ -186,6 +293,7 @@ package net.flashpunk.graphics
 			if (clearBefore) _buffer.fillRect(_bufferRect, 0);
 			_buffer.copyPixels(_source, _sourceRect, FP.zero, _drawMask, FP.zero);
 			if (_tint) _buffer.colorTransform(_bufferRect, _tint);
+			if (_texture) _texture = null;
 		}
 		
 		/**
@@ -414,5 +522,10 @@ package net.flashpunk.graphics
 		/** @protected */ protected var _flipped:Boolean;
 		/** @protected */ protected var _flip:BitmapData;
 		/** @protected */ protected static var _flips:Object = { };
+		
+		// Stage3D information.
+		/** @private */ protected static var _program:Program3D;
+		/** @private */ protected static var _indexBuffer:IndexBuffer3D;
+		/** @private */ protected static var _texture:Texture;
 	}
 }

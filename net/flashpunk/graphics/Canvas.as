@@ -3,6 +3,13 @@
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Graphics;
+	import flash.display3D.Context3D;
+	import flash.display3D.Context3DProgramType;
+	import flash.display3D.Context3DTextureFormat;
+	import flash.display3D.IndexBuffer3D;
+	import flash.display3D.Program3D;
+	import flash.display3D.VertexBuffer3D;
+	import flash.display3D.textures.Texture;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
@@ -84,6 +91,134 @@
 			}
 		}
 		
+		/** @private Renders the canvas to Stage3D. */
+		override public function renderStage3D(context:Context3D, point:Point, camera:Point):void
+		{
+			if (!_buffers || !context) return;
+			_point.x = point.x + x - camera.x * scrollX;
+			_point.y = point.y + y - camera.y * scrollY;
+			
+			if (_program == null) setupStage3D(context);
+			if (_textures == null) createTextures(context);
+			
+			var vertices:Vector.<Number>
+			var vertexBuffer:VertexBuffer3D = context.createVertexBuffer(4, 5); // 4 vertices of 5 coordinates each
+			
+			var matrix:Matrix3D = new Matrix3D(Vector.<Number>([
+				scaleX * scale, 0, 0, -originX * scaleX * scale,
+				0, scaleY * scale, 0, -originY * scaleY * scale,
+				0, 0, 1, 0,
+				0, 0, 0, 1
+			]));
+			if (angle != 0) matrix.appendRotation(angle * FP.RAD, Vector3D.Z_AXIS);
+			matrix.appendTranslation(originX + _point.x, originY + _point.y, 0);
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true); // assigns matrix to registers 'vc0' through 'vc3'
+			
+			switch (blend)
+			{
+				case BlendMode.ALPHA:
+					context.setBlendFactors(Context3DBlendFactor.ZERO, Context3DBlendFactor.SOURCE_ALPHA);
+					break;
+				case BlendMode.ERASE:
+					context.setBlendFactors(Context3DBlendFactor.ZERO, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+					break;
+				case BlendMode.ADD:
+					context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.DESTINATION_ALPHA);
+					break;
+				case BlendMode.MULTIPLY:
+					context.setBlendFactors(Context3DBlendFactor.DESTINATION_COLOR, Context3DBlendFactor.ZERO);
+					break;
+				case BlendMode.SCREEN:
+					context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE);
+					break;
+				case BlendMode.NORMAL:
+					context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+					break;
+				default:
+					if (blend) {
+						if (FP.console) FP.console.log("The blend mode '" + blend + "' does not work with Stage3D rendering.");
+						else trace("The blend mode '" + blend + "' does not work with Stage3D rendering.");
+					}
+					context.setBlendFactors(Context3DBlendFactor.ONE, Context3DBlendFactor.ZERO);
+					break;
+			}
+			
+			context.setProgram(_program);
+			
+			// draw each buffer
+			var i:int, buffer:BitmapData;
+			var minX:int = _point.x;
+			for (var yy:int = 0; yy < _refHeight; ++yy)
+			{
+				for (var xx:int = 0; xx < _refWidth; ++xx)
+				{
+					i = _ref.getPixel(xx, yy); // gets current index
+					buffer = _buffers[i]; // gets current buffer
+					
+					vertices = Vector.<Number>([
+						_point.x,                _point.y,                 0, 0, 0, // x, y, x, u, v
+						_point.x + buffer.width, _point.y,                 0, 1, 0,
+						_point.x,                _point.y + buffer.height, 0, 0, 1,
+						_point.x + buffer.width, _point.y + buffer.height, 0, 1, 1
+					]);
+					vertexBuffer.uploadFromVector(vertices, 0, 4); // 0 offset, 4 vertices
+					context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3); // assigns XYZ coordinates to register 'va0'
+					context.setVertexBufferAt(1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_2); // assigns UV coordinates to register 'va1'
+					
+					context.setTextureAt(0, _textures[i]); // assigns current texture to register 'fs0'
+					
+					context.drawTriangles(_indexBuffer);
+					
+					_point.x += _maxWidth;
+				}
+				_point.x = minX;
+				_point.y += _maxHeight;
+			}
+		}
+		
+		/** @private Creates the index buffer and shader program. */
+		protected function setupStage3D(context:Context3D):void
+		{
+			// create index buffer
+			_indexBuffer = context.createIndexBuffer(6);
+			_indexBuffer.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
+			
+			// create program
+			var vertexShader:AGALMiniAssembler = new AGALMiniAssembler();
+			vertexShader.assemble(
+				Context3DProgramType.VERTEX,
+				"m44 op, va0, vc0\n" + // transform XYZ coordinates using passed-in matrix and store result in output
+				"mov v0, va1" // pass UV coordinates to fragment shader
+			);
+			var fragmentShader:AGALMiniAssembler = new AGALMiniAssembler();
+			fragmentShader.assemble(
+				Context3DProgramType.FRAGMENT,
+				"tex oc, v0, fs0 <2d,linear,nomip,wrap>" // use UV coordinates to create texture and store result in output
+			);
+			_program = context.createProgram();
+			_program.upload(vertexShader.agalcode, fragmentShader.agalcode);
+		}
+		
+		/** @private Creates the Stage3D texture. */
+		protected function createTextures(context:Context3D):void
+		{
+			// create array of textures
+			_textures = new Vector.<Texture>(_refWidth * _refHeight, true);
+			// convert buffers to textures
+			var buffer:BitmapData, texture:Texture, i:int;
+			for (var yy:int = 0; yy < _refHeight; ++yy)
+			{
+				for (var xx:int = 0; xx < _refWidth; ++xx)
+				{
+					i = _ref.getPixel(xx, yy); // gets current index
+					buffer = _buffers[i]; // gets current buffer
+					texture = _textures[i]; // gets current texture
+					texture = context.createTexture(buffer.width, buffer.height, Context3DTextureFormat.BRGA, false);
+					texture.uploadFromBitmapData(buffer);
+				}
+			}
+		}
+		
 		/**
 		 * Draws to the canvas.
 		 * @param	x			X position to draw.
@@ -93,6 +228,8 @@
 		 */
 		public function draw(x:int, y:int, source:BitmapData, rect:Rectangle = null):void
 		{
+			_textures = null;
+			
 			var xx:int, yy:int;
 			for each (var buffer:BitmapData in _buffers)
 			{
@@ -119,6 +256,8 @@
 		 */
 		public function copyPixels(source:BitmapData, rect:Rectangle, destPoint:Point, alphaBitmapData:BitmapData = null, alphaPoint:Point = null, mergeAlpha:Boolean = false):void
 		{
+			_textures = null;
+			
 			var destX:int = destPoint.x;
 			var destY:int = destPoint.y;
 			
@@ -154,6 +293,8 @@
 		 */
 		public function fill(rect:Rectangle, color:uint = 0, alpha:Number = 1):void
 		{
+			_textures = null;
+			
 			var xx:int, yy:int, buffer:BitmapData;
 			_rect.width = rect.width;
 			_rect.height = rect.height;
@@ -182,6 +323,8 @@
 		 */
 		public function drawRect(rect:Rectangle, color:uint = 0, alpha:Number = 1):void
 		{
+			_textures = null;
+			
 			var xx:int, yy:int, buffer:BitmapData;
 			if (alpha >= 1)
 			{
@@ -225,6 +368,8 @@
 		 */
 		public function fillTexture(rect:Rectangle, texture:BitmapData):void
 		{
+			_textures = null;
+			
 			var xx:int, yy:int;
 			for each (var buffer:BitmapData in _buffers)
 			{
@@ -252,6 +397,8 @@
 		 */
 		public function drawGraphic(x:int, y:int, source:Graphic):void
 		{
+			_textures = null;
+			
 			var xx:int, yy:int;
 			for each (var buffer:BitmapData in _buffers)
 			{
@@ -279,6 +426,8 @@
 		
 		public function setPixel (x:int, y:int, color:uint):void
 		{
+			_textures = null;
+			
 			var buffer:BitmapData = _buffers[_ref.getPixel(x / _maxWidth, y / _maxHeight)];
 			
 			x %= _maxWidth;
@@ -306,6 +455,8 @@
 			_tint.greenMultiplier = (_color >> 8 & 0xFF) / 255;
 			_tint.blueMultiplier = (_color & 0xFF) / 255;
 			_tint.alphaMultiplier = _alpha;
+			
+			_textures = null;
 		}
 		
 		/**
@@ -328,6 +479,8 @@
 			_tint.greenMultiplier = (_color >> 8 & 0xFF) / 255;
 			_tint.blueMultiplier = (_color & 0xFF) / 255;
 			_tint.alphaMultiplier = _alpha;
+			
+			_textures = null;
 		}
 		
 		/**
@@ -373,5 +526,10 @@
 		// Global objects.
 		/** @private */ private var _rect:Rectangle = new Rectangle;
 		/** @private */ private var _graphics:Graphics = FP.sprite.graphics;
+		
+		// Stage3D information.
+		/** @private */ private static var _program:Program3D;
+		/** @private */ private static var _indexBuffer:IndexBuffer3D;
+		/** @private */ private var _textures:Vector.<Texture>;
 	}
 }

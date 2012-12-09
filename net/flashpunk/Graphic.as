@@ -1,6 +1,7 @@
 ﻿package net.flashpunk
 {
 	import flash.display.BitmapData;
+	import flash.display3D.Context3D;
 	import flash.geom.Point;
 	
 	/**
@@ -69,6 +70,17 @@
 		 * @param	camera		The camera offset.
 		 */
 		public function render(target:BitmapData, point:Point, camera:Point):void
+		{
+			
+		}
+		
+		/**
+		 * Renders the graphic to the Stage3D context.
+		 * @param	context		The Stage3D context to render to.
+		 * @param	point		The position to draw the graphic.
+		 * @param	camera		The camera offset.
+		 */
+		public function renderStage3D(context:Context3D, point:Point, camera:Point):void
 		{
 			
 		}
