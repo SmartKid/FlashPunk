@@ -632,9 +632,10 @@
 		 * @param	color	An RGB color.
 		 * @param	alpha	A number from 0.0 (fully transparent) to 1.0 (fully opaque).
 		 * @return	The color uint.
+		 */
 		public static function colorRGBAlpha(color:uint, alpha:Number = 1.0):uint
 		{
-			alpha = alpha < 0 ? (alpha > 1 ? 1 : alpha);
+			alpha = alpha < 0 ? (alpha > 1 ? 1 : alpha) : 0;
 			return (color & 0xFFFFFF) | (uint(Math.round(alpha * 0xFF)) << 24);
 		}
 		

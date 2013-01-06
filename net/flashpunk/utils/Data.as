@@ -148,11 +148,26 @@
 			_data[name] = value;
 		}
 		
-		/** @private Reads a property from the data object. */
-		private static function read(name:String, defaultValue:*):*
+		/**
+		 * Reads a property from the data object.
+		 * @param	name			Property to read.
+		 * @param	defaultValue	Default value.
+		 * @return	The property value, or defaultValue if the property is not assigned.
+		 */
+		public static function read(name:String, defaultValue:*):*
 		{
 			if (_data.hasOwnProperty(name)) return _data[name];
 			return defaultValue;
+		}
+		
+		/**
+		 * Writes a value to the current data.
+		 * @param	name		Property to write.
+		 * @param	value		Value to write.
+		 */
+		public static function write(name:String, value:*):void
+		{
+			_data[name] = value;
 		}
 		
 		/** @private Loads the data file, or return it if you're loading the same one. */
