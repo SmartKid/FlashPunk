@@ -104,7 +104,7 @@
 		 */
 		public static function define(name:String, ...keys):void
 		{
-			_control[name] = Vector.<int>(keys);
+			_control[name] = Vector.<int>(keys.length == 1 && (keys[0] is Array || keys[0] is Vector) ? keys[0] : keys);
 		}
 		
 		/**
